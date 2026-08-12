@@ -1,0 +1,9 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Advisor Student Management System//CN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:留学督导管理日历
+X-WR-CALDESC:留学网申督办系统-全员申请截止日与督学待办事项
+X-WR-TIMEZONE:Asia/Shanghai
+END:VCALENDAR

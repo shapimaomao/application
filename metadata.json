@@ -1,0 +1,6 @@
+{
+  "name": "Student Application Materials Tracker",
+  "description": "一站式留学网申申请材料进度追踪系统，支持申请Checklist智能总库（Excel智能解析识别与学生关联项目导出、截止日期与语言要求双向联动）、截止日期与轮次标注提醒、材料要件进度管理、通知督促中心、全局热同步以及后台导出详细申请汇总报告。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@media print {
+  /* Hide all non-printable elements */
+  .no-print,
+  button,
+  select,
+  input,
+  textarea,
+  form,
+  aside,
+  header,
+  .tab-buttons,
+  .action-buttons,
+  .interactive-control {
+    display: none !important;
+  }
+
+  /* Reset container heights and overflows to allow complete scrolling content to print */
+  html, body, #root, .flex, .h-screen, .w-screen, .overflow-hidden, .overflow-y-auto, main {
+    height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    background: #ffffff !important;
+    color: #0f172a !important; /* slate-900 */
+  }
+
+  /* Ensure the printed content takes full width */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force background colors and borders to render in PDF output */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page layouts and breaks */
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  .print-card {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem !important;
+    background: #ffffff !important;
+  }
+
+  /* Custom header for PDF printouts */
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 1rem;
+  }
+}
+
+/* Screen defaults for print elements */
+.print-only-header {
+  display: none;
+}
+

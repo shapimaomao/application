@@ -1,0 +1,266 @@
+{
+  "entities": {
+    "MaterialItem": {
+      "title": "Material Item",
+      "description": "An individual application material item required or optional.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "isRequired": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string"
+        },
+        "feedbackDueDate": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "portfolioRound": {
+          "type": "string"
+        },
+        "portfolioDeadline": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "isRequired",
+        "status",
+        "feedbackDueDate",
+        "notes"
+      ]
+    },
+    "DeadlineRound": {
+      "title": "Deadline Round",
+      "description": "A specific application round and its corresponding deadline.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "roundName": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "roundName",
+        "date"
+      ]
+    },
+    "SchoolApplication": {
+      "title": "School Application",
+      "description": "An individual university application entry for a student.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "schoolName": {
+          "type": "string"
+        },
+        "program": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "deadline": {
+          "type": "string"
+        },
+        "deadlineRound": {
+          "type": "string"
+        },
+        "deadlines": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string"
+        },
+        "materials": {
+          "type": "array"
+        },
+        "languageRequirement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "schoolName",
+        "program",
+        "country",
+        "deadline",
+        "status",
+        "materials"
+      ]
+    },
+    "TodoItem": {
+      "title": "Todo Item",
+      "description": "A student-specific to-do item.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "dueDate": {
+          "type": "string"
+        },
+        "isCompleted": {
+          "type": "boolean"
+        },
+        "associatedSchool": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "dueDate",
+        "isCompleted"
+      ]
+    },
+    "Student": {
+      "title": "Student Profile",
+      "description": "A student profile with their applications, tasks, and materials.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatarColor": {
+          "type": "string"
+        },
+        "targetDegree": {
+          "type": "string"
+        },
+        "targetMajor": {
+          "type": "string"
+        },
+        "advisorNotes": {
+          "type": "string"
+        },
+        "applications": {
+          "type": "array"
+        },
+        "todos": {
+          "type": "array"
+        },
+        "globalMaterials": {
+          "type": "array"
+        },
+        "ieltsScore": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "avatarColor",
+        "targetDegree",
+        "targetMajor",
+        "advisorNotes",
+        "applications",
+        "todos",
+        "globalMaterials"
+      ]
+    },
+    "NotificationLog": {
+      "title": "Notification Log",
+      "description": "A log of an alert or message sent to or regarding a student.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "studentId": {
+          "type": "string"
+        },
+        "studentName": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "isRead": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "studentId",
+        "studentName",
+        "message",
+        "timestamp",
+        "isRead"
+      ]
+    },
+    "SystemSettings": {
+      "title": "System Settings",
+      "description": "Global settings and templates shared by all users/students.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "globalTemplates": {
+          "type": "array"
+        },
+        "schoolTemplates": {
+          "type": "array"
+        },
+        "roundOptions": {
+          "type": "array"
+        },
+        "applicationTemplates": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "globalTemplates",
+        "schoolTemplates",
+        "roundOptions",
+        "applicationTemplates"
+      ]
+    }
+  },
+  "firestore": {
+    "students/{studentId}": {
+      "schema": "Student",
+      "description": "Students' details including progress and checklist requirements."
+    },
+    "notifications/{notificationId}": {
+      "schema": "NotificationLog",
+      "description": "Alert logs and message push history for students."
+    },
+    "settings/{settingsId}": {
+      "schema": "SystemSettings",
+      "description": "Global settings templates, rounds, and materials catalog definitions."
+    }
+  }
+}

@@ -1,0 +1,172 @@
+import { MasterChecklistItem } from './types';
+
+export const initialMasterChecklist: MasterChecklistItem[] = [
+  {
+    id: 'mchk-1',
+    schoolName: '卡内基梅隆大学',
+    program: 'MS in Computer Science',
+    country: '美国',
+    degree: '硕士研究生',
+    programUrl: 'https://csd.cmu.edu/academics/master-in-computer-science',
+    languageRequirement: '雅思 7.5 (写作不低于 7.0) / 托福 100 (单项不低于 25)',
+    deadlines: [
+      { id: 'dl-cmu-1', roundName: '早申/常规轮', date: '2026-12-01' },
+      { id: 'dl-cmu-2', roundName: '最终轮', date: '2026-12-15' }
+    ],
+    portfolioEngReq: 'No portfolio required for MS CS. Code samples or GitHub repository links can be referenced in CV or Personal Statement.',
+    portfolioUploadReq: '非强制要件 (GitHub/个人主页可在简历中注明)',
+    portfolioUrl: '',
+    personalStatementReq: '上限2页，需详述计算机科学理论背景、算法研究经验、项目产出及职业目标。',
+    researchProposalReq: '如申请Thesis track选修，需提供1-2页研究兴趣概述。',
+    videoTaskReq: '无强制视频任务',
+    recommendationReq: '3封学术推荐信，至少2封来自计算机系教授。',
+    cvReq: '1-2页英文CV，突出GPA、代码库链接与竞赛奖项。',
+    otherReq: 'GRE非强制但建议提交，需WES或官方成绩单直接寄送。',
+    notes: 'CS顶级大热门，材料重点在专业课高分与高水平代码产出。',
+    updatedAt: '2026-07-20 10:00:00'
+  },
+  {
+    id: 'mchk-2',
+    schoolName: '新加坡国立大学',
+    program: 'MS in Computer Science',
+    country: '新加坡',
+    degree: '硕士研究生',
+    programUrl: 'https://www.comp.nus.edu.sg/programmes/pg/msc-cs/',
+    languageRequirement: '雅思 7.0 (单项 6.5) / 托福 90 (写作 22)',
+    deadlines: [
+      { id: 'dl-nus-1', roundName: '主申轮', date: '2026-11-15' },
+      { id: 'dl-nus-2', roundName: '补录轮', date: '2027-01-15' }
+    ],
+    portfolioEngReq: 'Optional portfolio or Github projects link.',
+    portfolioUploadReq: '可选提交代表作PDF或演示视频链接',
+    portfolioUrl: '',
+    personalStatementReq: '不超过1000字，重点陈述动机、专业特长及新加坡就业规划。',
+    researchProposalReq: 'Coursework Track不强制需要RP。',
+    videoTaskReq: '无',
+    recommendationReq: '2封推荐信，系统网申推导。',
+    cvReq: '1页标准英文CV。',
+    otherReq: '需要提供大一至大三中英文成绩单盖章件与评分标准。',
+    notes: '新加坡首选，语言成绩需在截止日期前取得。',
+    updatedAt: '2026-07-21 14:30:00'
+  },
+  {
+    id: 'mchk-3',
+    schoolName: '皇家艺术学院',
+    program: 'MA in Service Design',
+    country: '英国',
+    degree: '硕士研究生',
+    programUrl: 'https://www.rca.ac.uk/study/programme-finder/service-design-ma/',
+    languageRequirement: '雅思 6.5 (写作不低于 6.0)',
+    deadlines: [
+      { id: 'dl-rca-1', roundName: '第一轮', date: '2026-10-15' },
+      { id: 'dl-rca-2', roundName: '第二轮', date: '2027-01-18' }
+    ],
+    portfolioEngReq: 'Upload up to 5 projects showing design process, research methods, system mapping, and final prototypes in a single PDF (max 20MB) or link.',
+    portfolioUploadReq: 'PDF格式，不超过20MB，包含1-5个完整服务设计项目，需展现过程推导。',
+    portfolioUrl: 'https://www.rca.ac.uk/study/programme-finder/service-design-ma/#entry-requirements',
+    personalStatementReq: '500字左右，陈述对Service Design的深刻理解及个人创作理念。',
+    researchProposalReq: '无特殊RP要求。',
+    videoTaskReq: '硬性要求：提交一段不超过2分钟的Video Journey/Personal Video，面对镜头讲述个人背景与选择RCA的原因。',
+    recommendationReq: '2封推荐信（学术或实习导师）。',
+    cvReq: '注重设计实践与实习经历的艺术类CV。',
+    otherReq: '毕业证明、成绩单及英文翻译件。',
+    notes: '视频任务是面试筛选的关键关卡，必须提前录制打磨。',
+    updatedAt: '2026-07-22 09:15:00'
+  },
+  {
+    id: 'mchk-4',
+    schoolName: '香港大学',
+    program: 'Master of Finance',
+    country: '中国香港',
+    degree: '硕士研究生',
+    programUrl: 'https://www.hkubs.hku.hk/masters/mfin/',
+    languageRequirement: '雅思 6.0 (单项不低于 5.5) / 托福 80',
+    deadlines: [
+      { id: 'dl-hku-1', roundName: '第一轮', date: '2026-09-30' },
+      { id: 'dl-hku-2', roundName: '第二轮', date: '2026-11-15' },
+      { id: 'dl-hku-3', roundName: '第三轮', date: '2027-01-30' }
+    ],
+    portfolioEngReq: 'N/A for finance programs.',
+    portfolioUploadReq: '无需作品集',
+    portfolioUrl: '',
+    personalStatementReq: '800字，突出数理分析能力、Python/R统计应用及金融机构实习经历。',
+    researchProposalReq: '不强制。',
+    videoTaskReq: '无，个别申请者可能会被邀请参加在线Kira面试。',
+    recommendationReq: '2封推荐信，需由推荐人在线填写评估问卷。',
+    cvReq: '精炼1页金融简历，包含GPA、GMAT/GRE分数（如有）。',
+    otherReq: '需提交官方评分标准（Grading System）证明。',
+    notes: '港大金融首轮截止极早，建议在9月中旬前准备齐备所有材料。',
+    updatedAt: '2026-07-22 16:00:00'
+  },
+  {
+    id: 'mchk-5',
+    schoolName: '南洋理工大学',
+    program: 'MSc in Data Science',
+    country: '新加坡',
+    degree: '硕士研究生',
+    programUrl: 'https://www.ntu.edu.sg/ccds/admissions/msc-in-data-science',
+    languageRequirement: '雅思 6.5 (单项 6.0) / 托福 85',
+    deadlines: [
+      { id: 'dl-ntu-1', roundName: '主申轮', date: '2026-12-31' },
+      { id: 'dl-ntu-2', roundName: '延申轮', date: '2027-02-28' }
+    ],
+    portfolioEngReq: 'Optional.',
+    portfolioUploadReq: '可在简历中附带Kaggle/GitHub项目链接',
+    portfolioUrl: '',
+    personalStatementReq: '600字个人陈述，涵盖数据科学项目经历。',
+    researchProposalReq: '无需',
+    videoTaskReq: '无',
+    recommendationReq: '2封推荐信。',
+    cvReq: '标准学术CV。',
+    otherReq: '学信网英文认证报告（如有）。',
+    notes: '适合工科/理科背景学生，课程偏向数据挖掘与机器学习实战。',
+    updatedAt: '2026-07-21 11:20:00'
+  },
+  {
+    id: 'mchk-6',
+    schoolName: '伦敦艺术大学',
+    program: 'MA in Interaction Design',
+    country: '英国',
+    degree: '硕士研究生',
+    programUrl: 'https://www.arts.ac.uk/subjects/communication-design/postgraduate/ma-interaction-design-lcc',
+    languageRequirement: '雅思 6.5 (单项不低于 6.0)',
+    deadlines: [
+      { id: 'dl-ual-1', roundName: '第一轮', date: '2026-11-10' },
+      { id: 'dl-ual-2', roundName: '第二轮', date: '2027-01-25' }
+    ],
+    portfolioEngReq: 'Portfolio of up to 20 pages or interactive prototype links showing physical/digital interaction projects.',
+    portfolioUploadReq: '最大包含20页PDF作品集，展示交互原型、用户测试与思考路线。',
+    portfolioUrl: 'https://www.arts.ac.uk/study-at-ual/apply/portfolio-advice',
+    personalStatementReq: '500字PS，说明为何选择LCC及交互设计探索方向。',
+    researchProposalReq: '无特殊RP',
+    videoTaskReq: '非强制，如包含交互演示短片可在作品集中嵌入链接。',
+    recommendationReq: '2封推荐信。',
+    cvReq: '1-2页艺术交互简历。',
+    otherReq: '学位证明与中英文成绩单。',
+    notes: '作品集注重用户体验研究与可交互原型的真实落地过程。',
+    updatedAt: '2026-07-19 18:00:00'
+  },
+  {
+    id: 'mchk-7',
+    schoolName: '南加州大学',
+    program: 'MS in Computer Science',
+    country: '美国',
+    degree: '硕士研究生',
+    programUrl: 'https://www.cs.usc.edu/academics/masters/',
+    languageRequirement: '雅思 7.0 (单项 6.0) / 托福 90 (单项 20)',
+    deadlines: [
+      { id: 'dl-usc-1', roundName: '常规轮', date: '2026-12-15' }
+    ],
+    portfolioEngReq: 'N/A',
+    portfolioUploadReq: '无需作品集',
+    portfolioUrl: '',
+    personalStatementReq: 'Personal Statement需包含清晰学术背景与研究兴趣。',
+    researchProposalReq: '无',
+    videoTaskReq: '无',
+    recommendationReq: '2-3封推荐信。',
+    cvReq: '1页标准CV。',
+    otherReq: 'GRE已免除（可不提交）。成绩单需上传包含评分标准。',
+    notes: 'USC看重GPA与核心计算机课程（算法、操作系统）的分数。',
+    updatedAt: '2026-07-20 15:00:00'
+  }
+];

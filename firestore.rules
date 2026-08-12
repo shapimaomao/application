@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Students collection rules
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+
+    // Notifications collection rules
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    // Shared global and school settings templates rules
+    match /settings/{settingsId} {
+      allow read, write: if true;
+    }
+  }
+}
