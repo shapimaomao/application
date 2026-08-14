@@ -84,17 +84,17 @@ export default function CalendarSyncModal({ students, isOpen, onClose }: Calenda
     // 1. Material Feedbacks
     student.globalMaterials?.forEach((m) => {
       if (m.feedbackDueDate) {
-        const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-        const key = `${student.id}-${m.feedbackDueDate}-${cleanName}`;
+        const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim();
+        const key = `${student.id}-${m.feedbackDueDate}-${cleanName.toLowerCase()}`;
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           allEvents.push({
             id: `mat-global-${student.id}-${m.id}`,
-            title: `[材料反馈] ${student.name}: ${m.name}`,
+            title: `[材料反馈] ${student.name}: ${cleanName}`,
             date: m.feedbackDueDate,
             type: 'feedback',
             studentName: student.name,
-            details: `学生: ${student.name} • 通用要件: ${m.name} (状态: ${m.status})`,
+            details: `学生: ${student.name} • 材料: ${cleanName} (${m.status})`,
           });
         }
       }
@@ -103,17 +103,17 @@ export default function CalendarSyncModal({ students, isOpen, onClose }: Calenda
     student.applications?.forEach((app) => {
       app.materials?.forEach((m) => {
         if (m.feedbackDueDate) {
-          const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-          const key = `${student.id}-${m.feedbackDueDate}-${app.id}-${cleanName}`;
+          const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim();
+          const key = `${student.id}-${m.feedbackDueDate}-${app.id}-${cleanName.toLowerCase()}`;
           if (!seenKeys.has(key)) {
             seenKeys.add(key);
             allEvents.push({
               id: `mat-app-${student.id}-${app.id}-${m.id}`,
-              title: `[专属要件] ${student.name} - ${app.schoolName}: ${m.name}`,
+              title: `[材料反馈] ${student.name} - ${app.schoolName}: ${cleanName}`,
               date: m.feedbackDueDate,
               type: 'feedback',
               studentName: student.name,
-              details: `学生: ${student.name} • ${app.schoolName}: ${m.name} (状态: ${m.status})`,
+              details: `学生: ${student.name} • ${app.schoolName}: ${cleanName} (${m.status})`,
             });
           }
         }
@@ -127,11 +127,11 @@ export default function CalendarSyncModal({ students, isOpen, onClose }: Calenda
               seenKeys.add(key);
               allEvents.push({
                 id: `deadline-${student.id}-${app.id}-${round.id}`,
-                title: `[申请截止] ${student.name} - ${app.schoolName} (${round.roundName})`,
+                title: `[申请截止] ${student.name} - ${app.schoolName}${round.roundName ? ' (' + round.roundName + ')' : ''}`,
                 date: round.date,
                 type: 'deadline',
                 studentName: student.name,
-                details: `学生: ${student.name} • ${app.schoolName} (${round.roundName}) • 项目: ${app.program || ''}`,
+                details: `学生: ${student.name} • ${app.schoolName}${round.roundName ? ' (' + round.roundName + ')' : ''} • 项目: ${app.program || ''}`,
               });
             }
           }
@@ -159,13 +159,18 @@ export default function CalendarSyncModal({ students, isOpen, onClose }: Calenda
           return;
         }
 
-        const cleanTextKey = todo.text.replace(/【要件督办】/g, '').replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-        const key = `${student.id}-${todo.dueDate}-${cleanTextKey}`;
+        const cleanText = todo.text
+          .replace(/【要件督办】/g, '')
+          .replace(/【通用材料】/g, '')
+          .replace(/【高校专属要件】/g, '')
+          .replace(/[\(\（].*?[\)\）]/g, '')
+          .trim();
+        const key = `${student.id}-${todo.dueDate}-${cleanText.toLowerCase()}`;
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           allEvents.push({
             id: `todo-${student.id}-${todo.id}`,
-            title: `[督学待办] ${student.name}: ${todo.text}`,
+            title: `[督学待办] ${student.name}: ${cleanText}`,
             date: todo.dueDate,
             type: 'todo',
             studentName: student.name,
@@ -628,10 +633,10 @@ export default function CalendarSyncModal({ students, isOpen, onClose }: Calenda
                   <div className="p-3 bg-slate-100/90 border border-slate-200 rounded-xl text-[11px] text-slate-700 space-y-1">
                     <p className="font-bold text-slate-900 flex items-center gap-1">
                       <Bell className="w-3.5 h-3.5 text-amber-600" />
-                      方案 3：在 iPhone 日历中直接作为“定时强提醒待办”使用
+                      方案 3：在 iPhone 日历中作为“静音日程与待办”订阅使用
                     </p>
                     <p>
-                      当前同步的日历项已全量包含 <code className="bg-white px-1 font-mono text-slate-800">VALARM</code> 响铃属性。截止日当天上午 09:00 手机锁屏会自动收到“督学提醒”弹窗，使用体验与提醒事项完全相同。
+                      已按需求移除了强制的 09:00 响铃提醒。日历项将以纯净全天日程与待办节点呈现，不打扰日常工作，您可在手机日历中按需独立开启单项提醒。
                     </p>
                   </div>
                 </div>

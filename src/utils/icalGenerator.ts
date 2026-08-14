@@ -20,15 +20,15 @@ export function generateICalendarFeed(students: Student[]): string {
     // 1. Global materials feedback due dates (Primary source for global materials)
     student.globalMaterials?.forEach((m) => {
       if (m.feedbackDueDate) {
-        const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-        const key = `${student.id}-${m.feedbackDueDate}-${cleanName}`;
+        const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim();
+        const key = `${student.id}-${m.feedbackDueDate}-${cleanName.toLowerCase()}`;
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           events.push({
             uid: `mat-global-${student.id}-${m.id}`,
-            title: `[材料反馈] ${student.name}: ${m.name}`,
+            title: `[材料反馈] ${student.name}: ${cleanName}`,
             date: m.feedbackDueDate,
-            description: `学生: ${student.name}\n通用要件: ${m.name}\n状态: ${m.status}\n说明: ${m.notes || '无'}`,
+            description: `学生: ${student.name}\n材料: ${cleanName}\n状态: ${m.status}${m.notes ? '\n说明: ' + m.notes : ''}`,
             studentName: student.name,
           });
         }
@@ -39,15 +39,15 @@ export function generateICalendarFeed(students: Student[]): string {
     student.applications?.forEach((app) => {
       app.materials?.forEach((m) => {
         if (m.feedbackDueDate) {
-          const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-          const key = `${student.id}-${m.feedbackDueDate}-${app.id}-${cleanName}`;
+          const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim();
+          const key = `${student.id}-${m.feedbackDueDate}-${app.id}-${cleanName.toLowerCase()}`;
           if (!seenKeys.has(key)) {
             seenKeys.add(key);
             events.push({
               uid: `mat-app-${student.id}-${app.id}-${m.id}`,
-              title: `[专属要件] ${student.name} - ${app.schoolName}: ${m.name}`,
+              title: `[材料反馈] ${student.name} - ${app.schoolName}: ${cleanName}`,
               date: m.feedbackDueDate,
-              description: `学生: ${student.name}\n目标高校: ${app.schoolName} (${app.program || ''})\n要件: ${m.name}\n状态: ${m.status}`,
+              description: `学生: ${student.name}\n目标高校: ${app.schoolName}${app.program ? ' (' + app.program + ')' : ''}\n材料: ${cleanName}\n状态: ${m.status}`,
               studentName: student.name,
             });
           }
@@ -62,9 +62,9 @@ export function generateICalendarFeed(students: Student[]): string {
               seenKeys.add(key);
               events.push({
                 uid: `deadline-${student.id}-${app.id}-${round.id}`,
-                title: `[申请截止] ${student.name} - ${app.schoolName} (${round.roundName})`,
+                title: `[申请截止] ${student.name} - ${app.schoolName}${round.roundName ? ' (' + round.roundName + ')' : ''}`,
                 date: round.date,
-                description: `学生: ${student.name}\n申请高校: ${app.schoolName}\n轮次: ${round.roundName}\n项目: ${app.program || '未定'}\n国家地区: ${app.country || ''}\n当前状态: ${app.status}`,
+                description: `学生: ${student.name}\n申请高校: ${app.schoolName}\n轮次: ${round.roundName || '默认轮次'}\n当前状态: ${app.status}`,
                 studentName: student.name,
               });
             }
@@ -78,7 +78,7 @@ export function generateICalendarFeed(students: Student[]): string {
             uid: `deadline-legacy-${student.id}-${app.id}`,
             title: `[申请截止] ${student.name} - ${app.schoolName}`,
             date: app.deadline,
-            description: `学生: ${student.name}\n申请高校: ${app.schoolName}\n项目: ${app.program || ''}\n当前状态: ${app.status}`,
+            description: `学生: ${student.name}\n申请高校: ${app.schoolName}\n当前状态: ${app.status}`,
             studentName: student.name,
           });
         }
@@ -93,15 +93,20 @@ export function generateICalendarFeed(students: Student[]): string {
           return;
         }
 
-        const cleanTextKey = todo.text.replace(/【要件督办】/g, '').replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-        const key = `${student.id}-${todo.dueDate}-${cleanTextKey}`;
+        const cleanText = todo.text
+          .replace(/【要件督办】/g, '')
+          .replace(/【通用材料】/g, '')
+          .replace(/【高校专属要件】/g, '')
+          .replace(/[\(\（].*?[\)\）]/g, '')
+          .trim();
+        const key = `${student.id}-${todo.dueDate}-${cleanText.toLowerCase()}`;
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           events.push({
             uid: `todo-${student.id}-${todo.id}`,
-            title: `[督学待办] ${student.name}: ${todo.text}`,
+            title: `[督学待办] ${student.name}: ${cleanText}`,
             date: todo.dueDate,
-            description: `学生: ${student.name}\n待办内容: ${todo.text}\n关联学校: ${todo.associatedSchool || '通用'}\n状态: ${todo.isCompleted ? '已完成' : '待处理'}`,
+            description: `学生: ${student.name}\n待办: ${cleanText}\n状态: ${todo.isCompleted ? '已完成' : '待处理'}`,
             studentName: student.name,
           });
         }
@@ -152,11 +157,6 @@ export function generateICalendarFeed(students: Student[]): string {
       `SUMMARY:${cleanTitle}`,
       `DESCRIPTION:${cleanDesc}`,
       'STATUS:CONFIRMED',
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      `DESCRIPTION:督学提醒: ${cleanTitle}`,
-      'TRIGGER:-P0DT9H0M0S',
-      'END:VALARM',
       'END:VEVENT',
 
       // Also generate VTODO for native Task/Reminder clients & apps (e.g. TickTick, GoodTask, Outlook, OmniFocus)
@@ -168,11 +168,6 @@ export function generateICalendarFeed(students: Student[]): string {
       `DESCRIPTION:${cleanDesc}`,
       'STATUS:NEEDS-ACTION',
       'PRIORITY:1',
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      `DESCRIPTION:待办提醒: ${cleanTitle}`,
-      'TRIGGER:-P0DT9H0M0S',
-      'END:VALARM',
       'END:VTODO'
     );
   });

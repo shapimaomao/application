@@ -18,7 +18,8 @@ import {
   BookOpen,
   FolderDot,
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  FileText
 } from 'lucide-react';
 import { exportElementToJpg, exportElementToPdf } from '../lib/exportUtils';
 import { NON_GENERAL_MATERIAL_IDS } from '../utils/materials';
@@ -27,9 +28,10 @@ interface ReportsViewProps {
   students: Student[];
   selectedStudentId?: string;
   onSelectStudent?: (id: string) => void;
+  onUpdateAdvisorNotes?: (notes: string, studentId?: string) => void;
 }
 
-export default function ReportsView({ students, selectedStudentId: propSelectedStudentId, onSelectStudent }: ReportsViewProps) {
+export default function ReportsView({ students, selectedStudentId: propSelectedStudentId, onSelectStudent, onUpdateAdvisorNotes }: ReportsViewProps) {
   const [selectedStudentId, setSelectedStudentId] = useState(propSelectedStudentId || students[0]?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [isExportingJPG, setIsExportingJPG] = useState(false);
@@ -790,7 +792,36 @@ export default function ReportsView({ students, selectedStudentId: propSelectedS
             )}
             </div>
 
-            {/* Advisor comment block removed per user request */}
+            {/* 提醒与说明 (Reminders & Explanations) 板块 */}
+            {currentStudent && (
+              <div className="mt-6 bg-slate-50/90 border border-slate-200/90 rounded-xl p-4 sm:p-5 shadow-sm space-y-3 export-keep print:bg-white print:border-slate-300">
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800 tracking-tight">提醒与说明</h3>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium print:hidden">
+                    导师督学意见与补充说明 • 可直接编辑输入
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    value={currentStudent.advisorNotes || ''}
+                    onChange={(e) => {
+                      if (onUpdateAdvisorNotes && currentStudent) {
+                        onUpdateAdvisorNotes(e.target.value, currentStudent.id);
+                      }
+                    }}
+                    placeholder="在此输入针对该学生的网申材料督导提醒、后续注意事项或补充说明..."
+                    rows={4}
+                    className="w-full bg-white border border-slate-200 rounded-lg p-3 text-xs text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none leading-relaxed resize-y font-sans shadow-inner"
+                  />
+                </div>
+              </div>
+            )}
 
 
 

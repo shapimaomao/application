@@ -286,15 +286,19 @@ export default function NotificationsView({
     // Collect global material feedback due dates
     student.globalMaterials?.forEach((m) => {
       if (m.feedbackDueDate) {
-        const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-        const key = `${student.id}-${m.feedbackDueDate}-${cleanName}`;
+        const cleanName = m.name
+          .replace(/[\(\（].*?[\)\）]/g, '')
+          .replace(/通用材料/g, '')
+          .replace(/高校专属要件/g, '')
+          .trim();
+        const key = `${student.id}-${m.feedbackDueDate}-${cleanName.toLowerCase()}`;
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           calendarEvents.push({
             id: `feedback-global-${student.id}-${m.id}`,
             type: 'feedback',
             date: m.feedbackDueDate,
-            title: `通用材料反馈: ${m.name}`,
+            title: cleanName,
             description: `说明: ${m.notes || '暂无说明'} (状态: ${m.status})`,
             studentName: student.name,
             studentId: student.id,
@@ -310,15 +314,19 @@ export default function NotificationsView({
     student.applications?.forEach((app) => {
       app.materials?.forEach((m) => {
         if (m.feedbackDueDate) {
-          const cleanName = m.name.replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-          const key = `${student.id}-${m.feedbackDueDate}-${app.id}-${cleanName}`;
+          const cleanName = m.name
+            .replace(/[\(\（].*?[\)\）]/g, '')
+            .replace(/通用材料/g, '')
+            .replace(/高校专属要件/g, '')
+            .trim();
+          const key = `${student.id}-${m.feedbackDueDate}-${app.id}-${cleanName.toLowerCase()}`;
           if (!seenKeys.has(key)) {
             seenKeys.add(key);
             calendarEvents.push({
               id: `feedback-school-${student.id}-${app.id}-${m.id}`,
               type: 'feedback',
               date: m.feedbackDueDate,
-              title: `高校专属要件: ${app.schoolName} - ${m.name}`,
+              title: `${app.schoolName}: ${cleanName}`,
               description: `说明: ${m.notes || '暂无说明'} (状态: ${m.status})`,
               studentName: student.name,
               studentId: student.id,
@@ -343,7 +351,7 @@ export default function NotificationsView({
                 id: `deadline-round-${student.id}-${app.id}-${round.id}`,
                 type: 'deadline',
                 date: round.date,
-                title: `${app.schoolName} - ${round.roundName}申请截止`,
+                title: `${app.schoolName}${round.roundName ? ' (' + round.roundName + ')' : ''} 截止`,
                 description: `申请项目: ${app.program} • 国家地区: ${app.country} (当前状态: ${app.status})`,
                 studentName: student.name,
                 studentId: student.id,
@@ -384,15 +392,22 @@ export default function NotificationsView({
           return;
         }
 
-        const cleanTextKey = todo.text.replace(/【要件督办】/g, '').replace(/[\(\（].*?[\)\）]/g, '').trim().toLowerCase();
-        const key = `${student.id}-${todo.dueDate}-${cleanTextKey}`;
+        const cleanText = todo.text
+          .replace(/【要件督办】/g, '')
+          .replace(/【通用材料】/g, '')
+          .replace(/【高校专属要件】/g, '')
+          .replace(/通用材料/g, '')
+          .replace(/高校专属要件/g, '')
+          .replace(/[\(\（].*?[\)\）]/g, '')
+          .trim();
+        const key = `${student.id}-${todo.dueDate}-${cleanText.toLowerCase()}`;
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
           calendarEvents.push({
             id: `todo-${student.id}-${todo.id}`,
             type: 'todo',
             date: todo.dueDate,
-            title: todo.text,
+            title: cleanText,
             description: todo.associatedSchool ? `关联高校: ${todo.associatedSchool}` : '通用待办事项',
             studentName: student.name,
             studentId: student.id,

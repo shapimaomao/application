@@ -237,6 +237,11 @@ export default function App() {
   // State to track if cloud data from Firebase Firestore is fully loaded
   const [cloudLoaded, setCloudLoaded] = useState(false);
 
+  // Refs to store last saved JSON snapshots to avoid redundant/repeated Firestore writes
+  const lastSavedStudentsRef = React.useRef<string>('');
+  const lastSavedNotificationsRef = React.useRef<string>('');
+  const lastSavedSettingsRef = React.useRef<string>('');
+
   // Synchronize state with Firebase Firestore
   useEffect(() => {
     async function initFirebaseSync() {
@@ -253,14 +258,23 @@ export default function App() {
           triggerAlert('💾 云端数据库每日免费额度已满，已自动启用本地离线缓存模式', 'info');
           return;
         }
+        let activeGlobalTemplates = globalTemplates;
+        let activeSchoolTemplates = schoolTemplates;
+        let activeRoundOptions = roundOptions;
+        let activeAppTemplates = applicationTemplates;
+        let activeMasterList = masterChecklist;
+
         if (settings) {
           if (settings.globalTemplates && settings.globalTemplates.length > 0) {
+            activeGlobalTemplates = settings.globalTemplates;
             setGlobalTemplates(settings.globalTemplates);
           }
           if (settings.schoolTemplates && settings.schoolTemplates.length > 0) {
+            activeSchoolTemplates = settings.schoolTemplates;
             setSchoolTemplates(settings.schoolTemplates);
           }
           if (settings.roundOptions && settings.roundOptions.length > 0) {
+            activeRoundOptions = settings.roundOptions;
             setRoundOptions(settings.roundOptions);
           }
           if (settings.applicationTemplates && settings.applicationTemplates.length > 0) {
@@ -277,7 +291,8 @@ export default function App() {
                 tplMap.set(t.id || t.templateName, t);
               }
             });
-            setApplicationTemplates(Array.from(tplMap.values()));
+            activeAppTemplates = Array.from(tplMap.values());
+            setApplicationTemplates(activeAppTemplates);
           }
           if (settings.masterChecklist && settings.masterChecklist.length > 0) {
             const savedMaster = localStorage.getItem('advisor_master_checklist');
@@ -299,15 +314,16 @@ export default function App() {
                 }
               }
             });
-            const mergedMaster = Array.from(itemMap.values());
-            setMasterChecklist(mergedMaster);
-            localStorage.setItem('advisor_master_checklist', JSON.stringify(mergedMaster));
+            activeMasterList = Array.from(itemMap.values());
+            setMasterChecklist(activeMasterList);
+            localStorage.setItem('advisor_master_checklist', JSON.stringify(activeMasterList));
           } else {
             const savedMaster = localStorage.getItem('advisor_master_checklist');
             if (savedMaster) {
               try {
                 const parsed = JSON.parse(savedMaster);
                 if (Array.isArray(parsed) && parsed.length > 0) {
+                  activeMasterList = parsed;
                   setMasterChecklist(parsed);
                 }
               } catch (e) {}
@@ -337,12 +353,23 @@ export default function App() {
           });
         }
 
+        // Cache initial loaded settings snapshot
+        lastSavedSettingsRef.current = JSON.stringify({
+          globalTemplates: activeGlobalTemplates,
+          schoolTemplates: activeSchoolTemplates,
+          roundOptions: activeRoundOptions,
+          applicationTemplates: activeAppTemplates,
+          masterChecklist: activeMasterList
+        });
+
         // 2. Load Students
         if (getIsQuotaExceeded()) { setCloudLoaded(true); return; }
         const cloudStudents = await dbLoadStudents();
         if (getIsQuotaExceeded()) { setCloudLoaded(true); return; }
         if (cloudStudents && cloudStudents.length > 0) {
-          setStudents(normalizeStudents(cloudStudents, globalTemplates, schoolTemplates));
+          const normStudents = normalizeStudents(cloudStudents, activeGlobalTemplates, activeSchoolTemplates);
+          setStudents(normStudents);
+          lastSavedStudentsRef.current = JSON.stringify(normStudents);
           // Auto select first student if current selected doesn't exist in cloud students
           if (!cloudStudents.some(s => s.id === selectedStudentId)) {
             setSelectedStudentId(cloudStudents[0].id);
@@ -350,6 +377,7 @@ export default function App() {
         } else if (!getIsQuotaExceeded()) {
           // No students in Firestore, populate them using current local storage or initial values
           await dbSaveStudentsBatch(students);
+          lastSavedStudentsRef.current = JSON.stringify(students);
         }
 
         // 3. Load Notifications
@@ -358,8 +386,10 @@ export default function App() {
         if (getIsQuotaExceeded()) { setCloudLoaded(true); return; }
         if (cloudNotifications && cloudNotifications.length > 0) {
           setNotifications(cloudNotifications);
+          lastSavedNotificationsRef.current = JSON.stringify(cloudNotifications);
         } else if (notifications.length > 0 && !getIsQuotaExceeded()) {
           await dbSaveNotificationsBatch(notifications);
+          lastSavedNotificationsRef.current = JSON.stringify(notifications);
         }
 
         setCloudLoaded(true);
@@ -397,14 +427,31 @@ export default function App() {
     }
   }, [students, cloudLoaded]);
 
-  // Save to LocalStorage instantly and Firebase debounced (only write to DB after first sync loaded)
+  // Save to LocalStorage instantly and Firebase debounced (only write to DB after first sync loaded AND data changed)
   useEffect(() => {
     localStorage.setItem('advisor_students', JSON.stringify(students));
     if (!cloudLoaded || getIsQuotaExceeded()) return;
 
     const timer = setTimeout(() => {
-      dbSaveStudentsBatch(students).catch(e => console.error('Error batch saving students:', e));
-    }, 2500);
+      const currentJson = JSON.stringify(students);
+      if (currentJson === lastSavedStudentsRef.current) {
+        // Data has not changed since last load or save: skip write to conserve Firestore write quota
+        return;
+      }
+
+      // Build prevStudentsMap for smart item-level diffing so only changed student docs are written
+      const prevMap = new Map<string, string>();
+      try {
+        const prevList: Student[] = JSON.parse(lastSavedStudentsRef.current || '[]');
+        prevList.forEach(s => prevMap.set(s.id, JSON.stringify(s)));
+      } catch (e) {}
+
+      dbSaveStudentsBatch(students, prevMap)
+        .then(() => {
+          lastSavedStudentsRef.current = currentJson;
+        })
+        .catch(e => console.error('Error batch saving students:', e));
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [students, cloudLoaded]);
@@ -414,8 +461,16 @@ export default function App() {
     if (!cloudLoaded || getIsQuotaExceeded()) return;
 
     const timer = setTimeout(() => {
-      dbSaveNotificationsBatch(notifications).catch(e => console.error('Error batch saving notifications:', e));
-    }, 2500);
+      const currentJson = JSON.stringify(notifications);
+      if (currentJson === lastSavedNotificationsRef.current) {
+        return;
+      }
+      dbSaveNotificationsBatch(notifications)
+        .then(() => {
+          lastSavedNotificationsRef.current = currentJson;
+        })
+        .catch(e => console.error('Error batch saving notifications:', e));
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [notifications, cloudLoaded]);
@@ -426,7 +481,7 @@ export default function App() {
     }
   }, [selectedStudentId]);
 
-  // Synchronize system settings to Firebase (debounced) when updated
+  // Synchronize system settings to Firebase (debounced) when updated AND data changed
   useEffect(() => {
     localStorage.setItem('advisor_custom_app_templates', JSON.stringify(applicationTemplates));
     localStorage.setItem('advisor_global_templates', JSON.stringify(globalTemplates));
@@ -437,14 +492,24 @@ export default function App() {
     if (!cloudLoaded || getIsQuotaExceeded()) return;
 
     const timer = setTimeout(() => {
-      dbSaveSystemSettings({
+      const currentSettingsObj = {
         globalTemplates,
         schoolTemplates,
         roundOptions,
         applicationTemplates,
         masterChecklist
-      }).catch(e => console.error('Error saving system settings:', e));
-    }, 2500);
+      };
+      const currentJson = JSON.stringify(currentSettingsObj);
+      if (currentJson === lastSavedSettingsRef.current) {
+        return;
+      }
+
+      dbSaveSystemSettings(currentSettingsObj)
+        .then(() => {
+          lastSavedSettingsRef.current = currentJson;
+        })
+        .catch(e => console.error('Error saving system settings:', e));
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [globalTemplates, schoolTemplates, roundOptions, applicationTemplates, masterChecklist, cloudLoaded]);
@@ -548,6 +613,18 @@ export default function App() {
         applicationTemplates,
         masterChecklist: activeMasterList
       });
+
+      // Update refs to prevent subsequent redundant auto-saves
+      lastSavedStudentsRef.current = JSON.stringify(activeStudents);
+      lastSavedNotificationsRef.current = JSON.stringify(notifications);
+      lastSavedSettingsRef.current = JSON.stringify({
+        globalTemplates,
+        schoolTemplates,
+        roundOptions,
+        applicationTemplates,
+        masterChecklist: activeMasterList
+      });
+
       if (getIsQuotaExceeded()) {
         triggerAlert('💾 修改后的 Checklist 与信息已成功保存至本地存储！（当前云端数据库每日免费额度已满，已自动启用本地离线保护）', 'info');
       } else {
@@ -672,9 +749,10 @@ export default function App() {
   };
 
   // 2. Advisor Notes Update
-  const handleUpdateAdvisorNotes = (notes: string) => {
-    setStudents(students.map(s => {
-      if (s.id === selectedStudentId) {
+  const handleUpdateAdvisorNotes = (notes: string, targetStudentId?: string) => {
+    const studentIdToUpdate = targetStudentId || selectedStudentId;
+    setStudents(prevStudents => prevStudents.map(s => {
+      if (s.id === studentIdToUpdate) {
         return { ...s, advisorNotes: notes };
       }
       return s;
@@ -1526,10 +1604,23 @@ export default function App() {
       let hasChanges = false;
       const newApps = (student.applications || []).map(app => {
         const cleanAppSchool = cleanSchoolNameChineseOnly(app.schoolName).trim().toLowerCase();
+        const cleanAppProg = app.program.trim().toLowerCase();
+
         const matchMaster = currentMasterList.find(m => {
+          if (app.masterChecklistId && m.id === app.masterChecklistId) return true;
           const cleanMSchool = cleanSchoolNameChineseOnly(m.schoolName).trim().toLowerCase();
-          return (cleanMSchool === cleanAppSchool || cleanMSchool.includes(cleanAppSchool) || cleanAppSchool.includes(cleanMSchool)) &&
-                 m.program.trim().toLowerCase() === app.program.trim().toLowerCase();
+          const schoolMatch = cleanMSchool && cleanAppSchool && (
+            cleanMSchool === cleanAppSchool ||
+            cleanMSchool.includes(cleanAppSchool) ||
+            cleanAppSchool.includes(cleanMSchool)
+          );
+          const cleanMProg = m.program.trim().toLowerCase();
+          const programMatch = cleanMProg && cleanAppProg && (
+            cleanMProg === cleanAppProg ||
+            cleanMProg.includes(cleanAppProg) ||
+            cleanAppProg.includes(cleanMProg)
+          );
+          return schoolMatch && programMatch;
         });
 
         if (matchMaster) {
@@ -1539,10 +1630,11 @@ export default function App() {
 
           return {
             ...app,
+            masterChecklistId: matchMaster.id,
             deadline: primaryDL,
             deadlineRound: primaryRound,
             deadlines: matchMaster.deadlines && matchMaster.deadlines.length > 0 ? matchMaster.deadlines : app.deadlines,
-            languageRequirement: matchMaster.languageRequirement || app.languageRequirement,
+            languageRequirement: matchMaster.languageRequirement !== undefined ? matchMaster.languageRequirement : app.languageRequirement,
             materials: (app.materials || []).map(m => {
               if (m.id === 'ps') {
                 return { ...m, isRequired: isMaterialRequired(matchMaster.personalStatementReq) };
@@ -1574,19 +1666,6 @@ export default function App() {
 
     setStudents(updatedStudents);
     localStorage.setItem('advisor_students', JSON.stringify(updatedStudents));
-
-    if (cloudLoaded && !getIsQuotaExceeded()) {
-      dbSaveSystemSettings({
-        globalTemplates,
-        schoolTemplates,
-        roundOptions,
-        applicationTemplates,
-        masterChecklist: currentMasterList,
-        lastSaveTime,
-        lastBackupTime,
-        lastSyncedTime: getFormattedDateTime()
-      }).catch(e => console.error('Error saving system settings:', e));
-    }
 
     return updatedStudents;
   };
@@ -1712,6 +1791,7 @@ export default function App() {
               onUpdateMasterChecklist={(newList) => {
                 setMasterChecklist(newList);
                 localStorage.setItem('advisor_master_checklist', JSON.stringify(newList));
+                handleSyncMasterToStudents(newList);
               }}
               students={students}
               onUpdateStudentApplications={handleUpdateStudentApplications}
@@ -1794,6 +1874,7 @@ export default function App() {
                   students={students}
                   selectedStudentId={selectedStudentId}
                   onSelectStudent={setSelectedStudentId}
+                  onUpdateAdvisorNotes={(notes, targetId) => handleUpdateAdvisorNotes(notes, targetId)}
                 />
               )}
             </>

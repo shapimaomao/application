@@ -141,20 +141,43 @@ interface FirestoreErrorInfo {
   };
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+function isQuotaError(error: unknown): boolean {
+  if (!error) return false;
   const errMsg = error instanceof Error ? error.message : String(error);
-  const code = error && typeof error === 'object' && 'code' in error ? String((error as any).code) : '';
-  if (
-    code.includes('resource-exhausted') || 
-    code.includes('quota') || 
-    errMsg.includes('resource-exhausted') || 
-    errMsg.includes('Quota limit exceeded') || 
+  const code = typeof error === 'object' && error !== null && 'code' in error ? String((error as any).code) : '';
+  return (
+    code.includes('resource-exhausted') ||
+    code.includes('quota') ||
+    errMsg.includes('resource-exhausted') ||
+    errMsg.includes('Quota limit exceeded') ||
     errMsg.includes('quota') ||
-    errMsg.includes('Free daily write units per project')
-  ) {
+    errMsg.includes('Free daily write units') ||
+    errMsg.includes('Free daily read units') ||
+    errMsg.includes('maximum allowed queued writes')
+  );
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (isQuotaError(event.reason)) {
+      markQuotaExceeded();
+      event.preventDefault();
+    }
+  });
+  window.addEventListener('error', (event) => {
+    if (isQuotaError(event.error) || isQuotaError(event.message)) {
+      markQuotaExceeded();
+    }
+  });
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  if (isQuotaError(error)) {
     markQuotaExceeded();
     return;
   }
+  const errMsg = error instanceof Error ? error.message : String(error);
+  const code = error && typeof error === 'object' && 'code' in error ? String((error as any).code) : '';
   if (cloudQuotaExceeded || errMsg.includes('client is offline') || code.includes('failed-precondition') || code.includes('unavailable')) {
     return;
   }
@@ -324,18 +347,28 @@ export async function dbLoadNotifications(): Promise<NotificationLog[]> {
 
 /**
  * Save multiple students in batch (useful for seeding/migration)
+ * Accepts an optional prevStudentsMap (studentId -> serialized JSON) to only write students that actually changed
  */
-export async function dbSaveStudentsBatch(studentsList: Student[]): Promise<void> {
+export async function dbSaveStudentsBatch(studentsList: Student[], prevStudentsMap?: Map<string, string>): Promise<void> {
   if (cloudQuotaExceeded || !db) return;
   const path = 'students';
   try {
     const batch = writeBatch(db);
+    let count = 0;
     studentsList.forEach((student) => {
+      const currentSerialized = JSON.stringify(student);
+      if (prevStudentsMap && prevStudentsMap.get(student.id) === currentSerialized) {
+        // Unchanged student document: skip write to conserve Firestore write quota
+        return;
+      }
       const ref = doc(db, 'students', student.id);
       const cleanData = sanitizeForFirestore(student);
       batch.set(ref, cleanData);
+      count++;
     });
-    await batch.commit();
+    if (count > 0) {
+      await batch.commit();
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
